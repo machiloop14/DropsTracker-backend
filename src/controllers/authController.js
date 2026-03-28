@@ -1,10 +1,16 @@
 import { prisma } from "../db.js";
 import { OAuth2Client } from "google-auth-library";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  hashToken,
+} from "../utils/auth.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const handleLogin = async (req, res) => {
   try {
+    //verify googleId token
     const { idToken } = req.body;
     const ticket = await client.verifyIdToken({
       idToken,
@@ -13,41 +19,59 @@ export const handleLogin = async (req, res) => {
 
     const payload = ticket.getPayload();
 
-    //check if user already exists in prisma. if yes, inform frontend
-    const existingUser = await prisma.user.findUnique({
+    //check if user already exists in prisma.
+    let user = await prisma.user.findUnique({
       where: {
         googleId: payload.sub,
       },
     });
 
-    if (existingUser) {
-      return res.status(200).json({
-        success: true,
-        message: "user already exists",
-        data: existingUser,
+    //if no, add user to database
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          googleId: payload.sub,
+          email: payload.email,
+          name: payload.name,
+          avatar: payload.picture,
+        },
       });
     }
 
-    //if no, add user to database
+    //generate access and refresh tokens
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
 
-    const newUser = await prisma.user.create({
+    //store refreshToken in db
+    const REFRESH_TTL_DAYS = 7;
+    await prisma.refreshToken.create({
       data: {
-        googleId: payload.sub,
-        email: payload.email,
-        name: payload.name,
-        avatar: payload.picture,
+        tokenHash: hashToken(refreshToken),
+        userId: user.id,
+        expiresAt: new Date(
+          Date.now() + REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000
+        ),
       },
+    });
+
+    //store refreshToken in http-only Cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      path: "/api/auth/refresh",
+      maxAge: REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000,
     });
 
     //return success response to frontend
     res.status(201).json({
       success: true,
       message: "user created successfully",
-      data: newUser,
+      data: { ...user, token: accessToken, refreshToken: refreshToken },
     });
     // res.json({payload})
 
-    console.log(idToken);
+    // console.log(idToken);
     console.log("google login SUCCESSFUL");
   } catch (error) {
     console.error("Google auth error:", error);
