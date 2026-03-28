@@ -3,7 +3,8 @@ import { OAuth2Client } from "google-auth-library";
 import {
   generateAccessToken,
   generateRefreshToken,
-  hashToken,
+  persistRefreshToken,
+  setRefreshCookie,
 } from "../utils/auth.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -38,40 +39,24 @@ export const handleLogin = async (req, res) => {
       });
     }
 
+    // JWT AUTHENTICATION FLOW
     //generate access and refresh tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
     //store refreshToken in db
-    const REFRESH_TTL_DAYS = 7;
-    await prisma.refreshToken.create({
-      data: {
-        tokenHash: hashToken(refreshToken),
-        userId: user.id,
-        expiresAt: new Date(
-          Date.now() + REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000
-        ),
-      },
-    });
+    await persistRefreshToken(refreshToken, user);
 
     //store refreshToken in http-only Cookie
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      path: "/api/auth/refresh",
-      maxAge: REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000,
-    });
+    setRefreshCookie(res, refreshToken);
 
     //return success response to frontend
     res.status(201).json({
       success: true,
       message: "user created successfully",
-      data: { ...user, token: accessToken, refreshToken: refreshToken },
+      data: { ...user, token: accessToken },
     });
-    // res.json({payload})
 
-    // console.log(idToken);
     console.log("google login SUCCESSFUL");
   } catch (error) {
     console.error("Google auth error:", error);
