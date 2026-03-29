@@ -3,24 +3,22 @@ import { prisma } from "./db.js";
 import authRoute from "./routes/authRoute.js";
 import cors from "cors";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 const app = express();
 const PORT = process.env.PORT || 8083;
 
 dotenv.config();
 
-// app.get("/add", async (req, res) => {
-//   const user = await prisma.user.create({
-//     data: {
-//       email: "Hamidusodiq14@gmail.com",
-//       name: "hamidu sodiq",
-//     },
-//   });
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 
-//   res.json(user);
-// });
-app.use(cors())
 app.use(express.json());
+app.use(cookieParser());
 
 app.use("/auth", authRoute);
 app.listen(PORT, "0.0.0.0", () => console.log("hello"));
