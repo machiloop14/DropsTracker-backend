@@ -60,5 +60,5 @@ export const rotateRefreshToken = async (res, userId) => {
 
   setRefreshCookie(res, newRefeshToken);
 
-  return { newAccessToken };
+  return { newAccessToken, newRefeshToken };
 };

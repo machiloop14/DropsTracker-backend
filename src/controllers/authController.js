@@ -51,13 +51,13 @@ export const handleLogin = async (req, res) => {
     await persistRefreshToken(refreshToken, user.id);
 
     //store refreshToken in http-only Cookie
-    setRefreshCookie(res, refreshToken);
+    // setRefreshCookie(res, refreshToken);
 
     //return success response to frontend
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: "user created successfully",
-      data: { ...user, token: accessToken },
+      message: "user logged in successfully",
+      data: { ...user, accessToken, refreshToken },
     });
 
     console.log("google login SUCCESSFUL");
@@ -72,15 +72,15 @@ export const handleLogin = async (req, res) => {
 };
 
 export const handleRefresh = async (req, res) => {
-  const token = req.cookies.refreshToken;
+  // const token = req.cookies.refreshToken;
+  const { token } = req.body;
+  console.log(token);
 
   // console.log(req.cookies);
 
-  //if no token in cookies, send a 401 (unauthorized) code
+  //if no token in body params, send a 401 (unauthorized) code
   if (!token)
-    return res
-      .status(401)
-      .json({ success: false, message: "Invalid or expired refresh tokenn 1" });
+    return res.status(401).json({ success: false, message: "No token passed" });
 
   //if exists, verify the token
   let payload;
@@ -89,7 +89,7 @@ export const handleRefresh = async (req, res) => {
   } catch (error) {
     return res
       .status(401)
-      .json({ sucess: false, message: "Invalid or expired refresh token 2" });
+      .json({ sucess: false, message: "Invalid or expired refresh token " });
   }
 
   //find token in db
@@ -118,7 +118,11 @@ export const handleRefresh = async (req, res) => {
     success: true,
     message: "token refresh successful",
     data: {
-      data: { userId: storedToken.userId, token: result.newAccessToken },
+      data: {
+        userId: storedToken.userId,
+        newAccessToken: result.newAccessToken,
+        newRefreshToken: result.newRefeshToken,
+      },
     },
   });
 };
