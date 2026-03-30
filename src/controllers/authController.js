@@ -118,11 +118,9 @@ export const handleRefresh = async (req, res) => {
     success: true,
     message: "token refresh successful",
     data: {
-      data: {
-        userId: storedToken.userId,
-        newAccessToken: result.newAccessToken,
-        newRefreshToken: result.newRefeshToken,
-      },
+      userId: storedToken.userId,
+      newAccessToken: result.newAccessToken,
+      newRefreshToken: result.newRefeshToken,
     },
   });
 };
