@@ -4,6 +4,9 @@ const isAuth = (req, res, next) => {
   //retrieve accessToken from authorization header
   const authHeader = req.headers.authorization;
 
+  if (!authHeader)
+    return res.status(401).json({ success: false, message: "No auth header" });
+
   // schema - "Bearer", token - accessToken
   const [schema, token] = authHeader.split(" ");
 
