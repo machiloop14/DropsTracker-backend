@@ -13,7 +13,6 @@ export const dropSchema = z
     }),
     endDate: z.coerce.date().optional().nullable(),
     startAlarm: z.coerce.date().optional().nullable(),
-    endAlarm: z.coerce.date().optional().nullable(),
   })
   .superRefine((data, ctx) => {
     if (data.endDate && data.startDate >= data.endDate) {

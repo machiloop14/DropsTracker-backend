@@ -1,4 +1,7 @@
 const validateSchema = (schema) => (req, res, next) => {
+  if (!req.body)
+    return res.status(400).json({ success: false, message: "NO body passed" });
+
   const result = schema.safeParse(req.body);
 
   if (!result.success) {
