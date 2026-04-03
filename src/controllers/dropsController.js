@@ -38,6 +38,11 @@ export const handleFetchAirdrops = async (req, res) => {
   try {
     const userId = req.user.id;
 
+    //pagination
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    let offset = (page - 1) * limit;
+
     //if no current user, return error
     if (!userId)
       return res
@@ -45,17 +50,32 @@ export const handleFetchAirdrops = async (req, res) => {
         .json({ success: false, message: "No user in current request" });
 
     //fetch all drops of current user
-    const fetchedAirdrops = await prisma.airdrop.findMany({
-      where: { userId: userId },
-    });
+    const [fetchedAirdrops, total] = await Promise.all([
+      prisma.airdrop.findMany({
+        where: { userId: userId },
+        skip: offset,
+        take: limit,
+        orderBy: {
+          updatedAt: "desc",
+        },
+      }),
+      prisma.airdrop.count({ where: { userId: userId } }),
+    ]);
 
     return res.status(200).json({
       success: true,
       message: "All airdrops fetched successfully",
       data: fetchedAirdrops,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
-    return res.status(400).json({
+    console.log(error);
+    return res.status(500).json({
       success: false,
       message: error.message ? error.message : "Error. Try again later",
     });
