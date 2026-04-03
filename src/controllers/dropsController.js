@@ -1,5 +1,6 @@
 import { success } from "zod";
 import { prisma } from "../db.js";
+import { paginateAirdropResults } from "../utils/paginateAirdropResults.js";
 
 export const handleAddAirdrop = async (req, res) => {
   let savedAirdrop;
@@ -38,29 +39,14 @@ export const handleFetchAirdrops = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    //pagination
-    let page = parseInt(req.query.page) || 1;
-    let limit = parseInt(req.query.limit) || 10;
-    let offset = (page - 1) * limit;
-
     //if no current user, return error
     if (!userId)
       return res
         .status(400)
         .json({ success: false, message: "No user in current request" });
 
-    //fetch all drops of current user
-    const [fetchedAirdrops, total] = await Promise.all([
-      prisma.airdrop.findMany({
-        where: { userId: userId },
-        skip: offset,
-        take: limit,
-        orderBy: {
-          updatedAt: "desc",
-        },
-      }),
-      prisma.airdrop.count({ where: { userId: userId } }),
-    ]);
+    const { fetchedAirdrops, total, page, limit } =
+      await paginateAirdropResults(req, userId);
 
     return res.status(200).json({
       success: true,
