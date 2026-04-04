@@ -4,6 +4,7 @@ import { dropSchema } from "../validators/dropSchema.js";
 import validateSchema from "../middlewares/validate.js";
 import {
   handleAddAirdrop,
+  handleDeleteAirdrop,
   handleFetchAirdrops,
 } from "../controllers/dropsController.js";
 
@@ -12,5 +13,6 @@ const router = express.Router();
 router.use(isAuth);
 router.post("/", validateSchema(dropSchema), handleAddAirdrop);
 router.get("/", handleFetchAirdrops);
+router.delete("/:id", handleDeleteAirdrop);
 
 export default router;

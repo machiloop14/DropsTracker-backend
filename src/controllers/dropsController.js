@@ -63,7 +63,40 @@ export const handleFetchAirdrops = async (req, res) => {
     console.log(error);
     return res.status(500).json({
       success: false,
-      message: error.message ? error.message : "Error. Try again later",
+      message: error.message ? error.message : "Server Error. Retry Later!",
+    });
+  }
+};
+
+export const handleDeleteAirdrop = async (req, res) => {
+  try {
+    const drop = await prisma.airdrop.findFirst({
+      where: {
+        userId: req.user.id,
+        id: req.params.id,
+      },
+    });
+
+    if (!drop)
+      return res
+        .status(404)
+        .json({ success: false, message: "Drop not found!" });
+
+    await prisma.airdrop.delete({
+      where: {
+        id: drop.id,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Drop deleted successfully!",
+      data: { id: drop.id },
+    });
+  } catch (error) {
+    return res.status(500).jsom({
+      success: false,
+      message: error.message ? error.message : "Server Error. Retry Later!",
     });
   }
 };
