@@ -133,3 +133,29 @@ export const handleUpdateAirdrop = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const handleFetchAirdrop = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const airdropDetails = await prisma.airdrop.findFirst({
+      where: {
+        id,
+        userId: req.user.id,
+      },
+    });
+
+    if (!airdropDetails)
+      return res
+        .status(404)
+        .json({ success: false, message: "Airdop not found!" });
+
+    res.status(200).json({
+      success: true,
+      message: "Fetched Airdrop Details Successful",
+      data: airdropDetails,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

@@ -5,6 +5,7 @@ import validateSchema from "../middlewares/validate.js";
 import {
   handleAddAirdrop,
   handleDeleteAirdrop,
+  handleFetchAirdrop,
   handleFetchAirdrops,
   handleUpdateAirdrop,
 } from "../controllers/dropsController.js";
@@ -16,5 +17,6 @@ router.post("/", validateSchema(dropSchema), handleAddAirdrop);
 router.get("/", handleFetchAirdrops);
 router.delete("/:id", handleDeleteAirdrop);
 router.patch("/:id", validateSchema(dropSchema), handleUpdateAirdrop);
+router.get("/:id", handleFetchAirdrop);
 
 export default router;
