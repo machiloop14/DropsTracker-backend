@@ -6,6 +6,7 @@ import {
   handleAddAirdrop,
   handleDeleteAirdrop,
   handleFetchAirdrops,
+  handleUpdateAirdrop,
 } from "../controllers/dropsController.js";
 
 const router = express.Router();
@@ -14,5 +15,6 @@ router.use(isAuth);
 router.post("/", validateSchema(dropSchema), handleAddAirdrop);
 router.get("/", handleFetchAirdrops);
 router.delete("/:id", handleDeleteAirdrop);
+router.patch("/:id", validateSchema(dropSchema), handleUpdateAirdrop);
 
 export default router;

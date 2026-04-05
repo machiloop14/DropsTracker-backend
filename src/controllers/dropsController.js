@@ -48,7 +48,7 @@ export const handleFetchAirdrops = async (req, res) => {
     const { fetchedAirdrops, total, page, limit } =
       await paginateAirdropResults(req, userId);
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "All airdrops fetched successfully",
       data: fetchedAirdrops,
@@ -88,7 +88,7 @@ export const handleDeleteAirdrop = async (req, res) => {
       },
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Drop deleted successfully!",
       data: { id: drop.id },
@@ -98,5 +98,38 @@ export const handleDeleteAirdrop = async (req, res) => {
       success: false,
       message: error.message ? error.message : "Server Error. Retry Later!",
     });
+  }
+};
+
+export const handleUpdateAirdrop = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const drop = await prisma.airdrop.findFirst({
+      where: {
+        id,
+        userId: req.user.id,
+      },
+    });
+
+    if (!drop) {
+      return res.status(404).json({
+        success: false,
+        message: "Drop not found",
+      });
+    }
+
+    const updatedDrop = await prisma.airdrop.update({
+      where: { id },
+      data: req.validatedData,
+    });
+
+    res.json({
+      success: true,
+      message: "Drop updated successfully",
+      data: updatedDrop,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
