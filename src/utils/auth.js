@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { prisma } from "../db.js";
 
-const ACCESS_TTL = "15m";
+const ACCESS_TTL = "3m";
 const REFRESH_TTL = "7d";
 const REFRESH_TTL_DAYS = 7;
 

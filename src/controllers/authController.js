@@ -124,3 +124,30 @@ export const handleRefresh = async (req, res) => {
     },
   });
 };
+
+export const handleFetchUser = async (req, res) => {
+  try {
+    console.log("/me route reached");
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // 5. return user
+    return res.json(user);
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
