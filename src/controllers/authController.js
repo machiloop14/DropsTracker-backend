@@ -125,6 +125,44 @@ export const handleRefresh = async (req, res) => {
   });
 };
 
+export const handleLogout = async (req, res) => {
+  console.log("logout route reached")
+  console.log(req.body)
+  const {refreshToken} = req.body;
+
+  console.log("logout refresh token " + refreshToken)
+
+   //if no token in body params, send a 401 (unauthorized) code
+  if (!refreshToken)
+    return res.status(401).json({ success: false, message: "No token passed" });
+
+   //delete token in db
+  const tokenHash = hashToken(refreshToken);
+
+  const storedToken = await prisma.refreshToken.findUnique({
+    where: { tokenHash },
+  });
+
+  //if token does not exist in db, return error
+  if (!storedToken)
+    return res
+      .status(401)
+      .json({ success: false, message: "Token does not exist in DB" });
+
+  //if token exists in db, delete
+  const deletedToken = await prisma.refreshToken.delete({
+    where: {tokenHash}
+  })
+
+  return res.json({
+    success: true,
+    message: "Refresh token deleted successfully",
+    data: deletedToken
+  });
+
+  
+}
+
 export const handleFetchUser = async (req, res) => {
   try {
     console.log("/me route reached");
